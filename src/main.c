@@ -55,32 +55,38 @@ int main(int argc, char* argv[])
         offset,
         extra,
         rows,
-        rows_for_send;
-    tipoMatriz* tmp;
+        rows_for_send,
+        rows_for_recv;
+    
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &task);
     MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
     MPI_Status status;
+
+    tipoMatriz* tmp;
     struct matrix* B = init_matrix(p, q);
     vander(B);
+
+    num_slaves = num_tasks - 1;
+    rows = m / num_slaves;
+    extra = m % num_slaves;
+
     if(task == 0)
     {
         struct matrix* A = init_matrix(m, n);
         toeplitz(A);
         show_matrix(A);
-        num_slaves = num_tasks - 1;
+
         printf("Numero de Escravos: %d \n", num_slaves);
-        rows =  m / num_slaves;
-        extra = m % num_slaves;
         offset = 0;
+
         for(dest = 1; dest <= num_slaves; dest++)
         {
 
             rows_for_send = (dest <= extra) ? rows + 1 : rows;
             tmp = malloc(n*rows_for_send*sizeof(tipoMatriz));
             printf("sending %d rows to task %d \n", rows_for_send, dest);
-            MPI_Send(&rows_for_send, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            MPI_Send(&offset, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
+
             for(i = 0; i < n*rows_for_send; i++)
             {
                 // atribuir ao vetor temporário as linhas a serem enviadas.
@@ -100,8 +106,8 @@ int main(int argc, char* argv[])
     }
     else
     {
-        MPI_Recv(&rows_for_send, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(&offset, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        rows_for_recv = (task <= extra) ? rows + 1 : rows;
+        tmp = malloc(n*rows_for_recv*sizeof(tipoMatriz));
         //MPI_Recv(tmp, n*rows_for_send, MPI_INT, 0 , 0, MPI_COMM_WORLD, &status);
         //printf("Task: %d Recv %d rows offset %d \n", task, rows_for_send, offset);
         for(i = offset; i < offset+ rows_for_send; i++)
