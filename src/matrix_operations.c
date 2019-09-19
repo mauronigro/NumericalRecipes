@@ -11,9 +11,9 @@ struct matrix* multiply_matrix(struct matrix* A, struct matrix* B){
             	sum = 0;
             	for (k = 0; k < A->col; k++) // or B->row , because A->col == B->row
 				{
-                	sum += A->m[i][k] * B->m[k][j];
+                	sum += A->m[i*(A->row)+k] * B->m[k*(B->row)+j];
                 }
-            	RESULT->m[i][j] = sum;
+            	RESULT->m[i*(RESULT->row)+j] = sum;
 	    }	
 	}
 	return RESULT;

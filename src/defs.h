@@ -1,7 +1,7 @@
 typedef double tipoMatriz;
 
 struct matrix{
-	tipoMatriz** m;
+	tipoMatriz* m;
 	int row;
 	int col;
 };

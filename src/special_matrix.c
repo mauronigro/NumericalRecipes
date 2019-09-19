@@ -6,7 +6,7 @@ void toeplitz(struct matrix* M){
 	{
 		for(j = 0; j < M->col; j++)
 		{	
-			M->m[i][j] = i > j ? 1 + M->row-  abs(i-j)  : 1 + abs(i-j);
+			M->m[i*(M->row)+j] = i > j ? 1 + M->row-  abs(i-j)  : 1 + abs(i-j);
 		}
 	}
 }
@@ -16,10 +16,10 @@ void tridiagonal(struct matrix* M){
 	for(i = 0; i < M->row; i++){
 		for(j = 0; j < M->col; j++){
 			if(abs(i-j) <= 1){
-				M->m[i][j] = 1+rand()%6;
+				M->m[i*(M->row)+j] = 1+rand()%6;
 			}
 			else{
-				M->m[i][j] = 0;
+				M->m[i*(M->row)+j] = 0;
 			}
 		}
 	}
@@ -33,10 +33,10 @@ void triangular(struct matrix* M){
 		for (i = 0; i < M->row; i++) { 
 		    for (j = 0; j < M->col; j++) { 
 		        if (i > j){ 
-		            M->m[i][j] = 0;
+		            M->m[i*(M->row)+j] = 0;
 		        } 
 		        else
-		        M->m[i][j] = rand() % 6 + 1; 
+		        M->m[i*(M->row)+j] = rand() % 6 + 1; 
 		    } 
 		} 
 	}
@@ -46,7 +46,7 @@ void triangular(struct matrix* M){
 
 void vander(struct matrix* M){
 	int i, j, k;
-	int a[(M->row+1)	* M->row];
+	int a[(M->row+1)*(M->row)];
 	for(i = 0;i < M->row*M->row; i++){
 		a[i] =0;
 	}
@@ -57,7 +57,7 @@ void vander(struct matrix* M){
 	
 	for(i =0; i < M->row; i++){
 		for(j = 0; j < M->col; j++){
-			M->m[i][j] = pow(a[i*M->row], j);
+			M->m[i*(M->row)+j] = pow(a[i*M->row], j);
 		}
 	}
 }
