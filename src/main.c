@@ -36,12 +36,15 @@
  * */
 int main(int argc, char* argv[])
 {
+    /* Variáveis de entrada */
     int m = atoi(argv[1]), 
         n = atoi(argv[2]), 
         p = atoi(argv[3]), 
         q = atoi(argv[4]);
+    /* Condição para matriz poder ser multiplicada */
     if(n != p)
         return 0;
+    /* Variáveis iniciais */
     int task, 
         num_tasks, 
         num_slaves,
@@ -58,10 +61,11 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &task);
     MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
     MPI_Status status;
-    struct matrix* A = init_matrix(m, n);
     struct matrix* B = init_matrix(p, q);
+    vander(B);
     if(task == 0)
     {
+        struct matrix* A = init_matrix(m, n);
         toeplitz(A);
         show_matrix(A);
         num_slaves = num_tasks - 1;
@@ -69,7 +73,6 @@ int main(int argc, char* argv[])
         rows =  m / num_slaves;
         extra = m % num_slaves;
         offset = 0;
-        tipoMatriz* tmp;
         for(dest = 1; dest <= num_slaves; dest++)
         {
 
@@ -77,7 +80,6 @@ int main(int argc, char* argv[])
             tmp = malloc(n*rows_for_send*sizeof(tipoMatriz));
             printf("sending %d rows to task %d \n", rows_for_send, dest);
             MPI_Send(&rows_for_send, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            //printf("Offset:%d \n", offset);
             MPI_Send(&offset, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
             for(i = 0; i < n*rows_for_send; i++)
             {
@@ -86,6 +88,7 @@ int main(int argc, char* argv[])
                 printf("%.0lf ", tmp[i]);
             }
             printf("\n");
+            //MPI_Send(tmp, n*rows_for_send, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
             for(i = offset; i < offset + rows_for_send; i++)
             {
                 printf("Send for Task: %d, row %d \n", dest, i);
@@ -99,6 +102,7 @@ int main(int argc, char* argv[])
     {
         MPI_Recv(&rows_for_send, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(&offset, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        //MPI_Recv(tmp, n*rows_for_send, MPI_INT, 0 , 0, MPI_COMM_WORLD, &status);
         //printf("Task: %d Recv %d rows offset %d \n", task, rows_for_send, offset);
         for(i = offset; i < offset+ rows_for_send; i++)
         {
