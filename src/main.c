@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
     tipoMatriz* tmp;
     struct matrix* B = init_matrix(p, q);
-    vander(B);
+    triangular(B);
 
     num_slaves = num_tasks - 1;
     rows = m / num_slaves;
@@ -73,6 +73,7 @@ int main(int argc, char* argv[])
 
     if(task == 0)
     {
+	/* Matriz A a ser multiplicada */
         struct matrix* A = init_matrix(m, n);
         toeplitz(A);
         show_matrix(A);
@@ -86,36 +87,29 @@ int main(int argc, char* argv[])
             rows_for_send = (dest <= extra) ? rows + 1 : rows;
             tmp = malloc(n*rows_for_send*sizeof(tipoMatriz));
             printf("sending %d rows to task %d \n", rows_for_send, dest);
-
+            // atribui ao vetor temporário (tmp) a ser enviado;
             for(i = 0; i < n*rows_for_send; i++)
             {
-                // atribuir ao vetor temporário as linhas a serem enviadas.
                 tmp[i] = A->m[offset*m+i];
                 printf("%.0lf ", tmp[i]);
             }
             printf("\n");
-            //MPI_Send(tmp, n*rows_for_send, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
-            for(i = offset; i < offset + rows_for_send; i++)
-            {
-                printf("Send for Task: %d, row %d \n", dest, i);
-            }
+            MPI_Send(tmp, n*rows_for_send, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
+	    MPI_Send(&offset , 1 , MPI_INT, dest, 0, MPI_COMM_WORLD);
             offset = offset + rows_for_send;
             free(tmp);
-        } 
+        }
         destroy_matrix(A);
     }
     else
     {
         rows_for_recv = (task <= extra) ? rows + 1 : rows;
         tmp = malloc(n*rows_for_recv*sizeof(tipoMatriz));
-        //MPI_Recv(tmp, n*rows_for_send, MPI_INT, 0 , 0, MPI_COMM_WORLD, &status);
-        //printf("Task: %d Recv %d rows offset %d \n", task, rows_for_send, offset);
-        for(i = offset; i < offset+ rows_for_send; i++)
-        {
-            //printf("Recv for Task %d, row %d \n", task, i);
-        }
-        //MPI_Recv(B->m, (B->col)*(B->row), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(tmp, n*rows_for_recv, MPI_DOUBLE, 0 , 0, MPI_COMM_WORLD, &status);
+	MPI_Recv(&offset, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);    
+	free(tmp);	
     }
+
 	MPI_Finalize();
 	return 0;
 }
