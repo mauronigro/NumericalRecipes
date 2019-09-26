@@ -78,19 +78,18 @@ int main(int argc, char* argv[])
 	/* Matriz A a ser multiplicada */
         struct matrix* A = init_matrix(m, n);
         struct matrix* C = init_matrix(m, q);
+        struct matrix* D = init_matrix(m, q);
         toeplitz(A);
         C = multiply_matrix(A, B);
         show_matrix(A);
         show_matrix(B);
         show_matrix(C);
-        printf("Numero de Escravos: %d \n", num_slaves);
         offset = 0;
         for(dest = 1; dest <= num_slaves; dest++)
         {
 
             rows_for_send = (dest <= extra) ? rows + 1 : rows;
             tmp = malloc(n*rows_for_send*sizeof(tipoMatriz));
-            printf("sending %d rows to task %d \n", rows_for_send, dest);
             // atribui ao vetor temporário (tmp) a ser enviado;
             for(i = 0; i < n*rows_for_send; i++)
                 tmp[i] = A->m[offset*m+i];
@@ -105,20 +104,21 @@ int main(int argc, char* argv[])
             rows_for_recv = (dest <= extra) ? rows + 1 : rows;
             result = malloc(n*rows_for_recv*sizeof(tipoMatriz));
             MPI_Recv(result, n*rows_for_recv, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD, &status);
-            for(i = offset; i < rows_for_recv; i++)
+            for(i = 0; i < rows_for_recv; i++)
             {
                 for(j = 0; j < n; j++)
                 {
-                    C->m[i*m + j] = result[i*rows_for_recv+j];
+                    D->m[(i+offset)*m+j] = result[i*n+j];
                 }
             }
             offset += rows_for_recv;
             free(result);
         }
-        show_matrix(C);
+        show_matrix(D);
         destroy_matrix(A);
         destroy_matrix(B);
         destroy_matrix(C);
+        destroy_matrix(D);
     }
     else
     {
@@ -135,20 +135,11 @@ int main(int argc, char* argv[])
                 sum  = 0;
                 for(k = 0; k < n; k++)
                 {
-                    sum+= tmp[i*(rows_for_recv)+k]*(B->m[k*(B->row)+j]);
+                    sum+= tmp[i*(n)+k]*(B->m[k*p+j]);
                 }
-                result[i*rows_for_recv +j] = sum;
+                result[i*n +j] = sum;
             }
         }
-        /**
-        printf("Task %d \n", task);
-        for(i = 0; i < n*rows_for_recv; i++)
-        {
-            printf("%0.lf ", result[i]);
-
-        }
-        printf("\n");
-        */
         MPI_Send(result, n*rows_for_recv, MPI_DOUBLE, 0 , 0, MPI_COMM_WORLD);
         free(tmp);
         free(result);

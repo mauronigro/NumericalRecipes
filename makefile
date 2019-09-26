@@ -4,4 +4,4 @@ LIBS = -lm
 CC = mpicc
 all:
 	$(CC) -o $(BIN) $(SOURCE) $(LIBS)
-	mpirun -n 4 ./$(BIN) 7 7 7 7 
+	mpirun -n 4 ./$(BIN) 9 9 9 9 
