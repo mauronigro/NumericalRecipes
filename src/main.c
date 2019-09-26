@@ -43,7 +43,10 @@ int main(int argc, char* argv[])
         q = atoi(argv[4]);
     /* Condição para matriz poder ser multiplicada */
     if(n != p)
+    {
+	printf("Colunas de A diferentes das linhas de B\n");
         return 0;
+    }
     /* Variáveis iniciais */
     int task, 
         num_tasks, 
@@ -60,6 +63,7 @@ int main(int argc, char* argv[])
         rows_for_recv;
     
     MPI_Init(&argc, &argv);
+    double t1 = MPI_Wtime();
     MPI_Comm_rank(MPI_COMM_WORLD, &task);
     MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
     MPI_Status status;
@@ -77,13 +81,13 @@ int main(int argc, char* argv[])
     {
 	/* Matriz A a ser multiplicada */
         struct matrix* A = init_matrix(m, n);
-        struct matrix* C = init_matrix(m, q);
+        //struct matrix* C = init_matrix(m, q);
         struct matrix* D = init_matrix(m, q);
         toeplitz(A);
-        C = multiply_matrix(A, B);
-        show_matrix(A);
-        show_matrix(B);
-        show_matrix(C);
+        //C = multiply_matrix(A, B);
+        //show_matrix(A);
+        //show_matrix(B);
+        //show_matrix(C);
         offset = 0;
         for(dest = 1; dest <= num_slaves; dest++)
         {
@@ -114,10 +118,9 @@ int main(int argc, char* argv[])
             offset += rows_for_recv;
             free(result);
         }
-        show_matrix(D);
+        //show_matrix(D);
         destroy_matrix(A);
         destroy_matrix(B);
-        destroy_matrix(C);
         destroy_matrix(D);
     }
     else
@@ -144,7 +147,10 @@ int main(int argc, char* argv[])
         free(tmp);
         free(result);
     }
+    	double t2 = MPI_Wtime();
 	MPI_Finalize();
+	if(task == 0)
+		printf("Tempo de execução da multiplicação matricial (Paralelo): %.20lf segundos\n", t2-t1);
 	return 0;
 }
 /*  Matrix: https://software.intel.com/en-us/articles/performance-of-classic-matrix-multiplication-algorithm-on-intel-xeon-phi-processor-system
